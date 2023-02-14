@@ -1,5 +1,6 @@
 const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
 const userModel = require("../users/users-model");
+const jwt = require('jsonwebtoken');
 const sinirli = (req, res, next) => {
   /*
     Eğer Authorization header'ında bir token sağlanmamışsa:
@@ -16,6 +17,27 @@ const sinirli = (req, res, next) => {
 
     Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
   */
+    
+    try{
+      let authHeader = req.headers['authorization'];
+      if (!authHeader) {
+  
+        next({
+          status:401,
+          message: "Token gereklidir"
+        });
+      }
+      else{
+        next({
+          status:401,
+          message: authHeader
+        });
+      }
+    }
+    catch(err){
+      next(err);
+    }
+  
 }
 
 const sadece = role_name => (req, res, next) => {
@@ -51,7 +73,7 @@ const usernameVarmi = async(req, res, next) => {
       })
     }
     else{
-      req.user = possible;
+      req.user = possible[0];
       next();
     }
   }

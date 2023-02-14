@@ -1,8 +1,11 @@
 const router = require("express").Router();
 const { usernameVarmi, rolAdiGecerlimi } = require('./auth-middleware');
-const { JWT_SECRET } = require("../secrets"); // bu secret'ı kullanın!
+const  JWT_SECRET  = require("../secrets"); // bu secret'ı kullanın!
 const bcrypt = require('bcryptjs');
 const userModel = require("../users/users-model");
+const jwt = require("jsonwebtoken");
+
+
 
 router.post("/register", rolAdiGecerlimi, async(req, res, next) => {
   /**
@@ -51,6 +54,30 @@ router.post("/login", usernameVarmi, (req, res, next) => {
       "role_name": "admin" // giriş yapan kulanıcının role adı
     }
    */
+  try{
+    const {password} = req.body;
+    if(!bcrypt.compareSync(password, req.user.password)){
+      next({
+        status:401,
+        message:"Geçersiz kriter"
+      })
+    }
+    else{
+      const token = jwt.sign({
+        subject: req.user.user_id,
+        username: req.user.username,
+        role_name: req.user.role_name
+      }, JWT_SECRET.jwtSecret, {expiresIn: '1d'});
+
+      res.status(200).json({
+        message:`${req.user.username} geri geldi!`,
+        token: token
+      });
+    }
+  }
+  catch(err){
+    next(err);
+  }
 });
 
 module.exports = router;
