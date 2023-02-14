@@ -21,6 +21,11 @@ server.get("/",async(req, res) => {
   })
 });
 
+server.use("*",(req, res) => {
+  res.status(404).json({
+    message:"Oops Not Found"
+  })
+});
 server.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status || 500).json({
     message: err.message,

@@ -1,5 +1,5 @@
 const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
-
+const userModel = require("../users/users-model");
 const sinirli = (req, res, next) => {
   /*
     Eğer Authorization header'ında bir token sağlanmamışsa:
@@ -33,7 +33,7 @@ const sadece = role_name => (req, res, next) => {
 }
 
 
-const usernameVarmi = (req, res, next) => {
+const usernameVarmi = async(req, res, next) => {
   /*
     req.body de verilen username veritabanında yoksa
     status: 401
@@ -41,10 +41,27 @@ const usernameVarmi = (req, res, next) => {
       "message": "Geçersiz kriter"
     }
   */
+  try{
+    const {username} = req.body;
+    const possible = await userModel.goreBul({username: username});
+    if(possible.length===0){
+      next({
+        status:401,
+        message: "Geçersiz kriter"
+      })
+    }
+    else{
+      req.user = possible;
+      next();
+    }
+  }
+  catch(err){
+    next(err);
+  }
 }
 
 
-const rolAdiGecerlimi = (req, res, next) => {
+const rolAdiGecerlimi = async (req, res, next) => {
   /*
     Bodydeki rol_name geçerliyse, req.role_name öğesini trimleyin ve devam edin.
 
@@ -63,6 +80,26 @@ const rolAdiGecerlimi = (req, res, next) => {
       "message": "rol adı 32 karakterden fazla olamaz"
     }
   */
+  if(!req.body.role_name || await req.body.role_name.trim() === ""){
+    req.body.role_name = "student";
+    next();
+  }
+  else if(await req.body.role_name.trim() === "admin"){
+    next({
+      status:422,
+      message: "Rol adı admin olamaz"
+    });
+  }
+  else if((await req.body.role_name.trim()).length > 32){
+    next({
+      status:422,
+      message: "rol adı 32 karakterden fazla olamaz"
+    });
+  }
+  else{
+    req.body.role_name = await req.body.role_name.trim();
+    next();
+  }
 }
 
 module.exports = {
