@@ -1,4 +1,4 @@
-const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
+const JWT_SECRET  = require("../secrets"); // bu secreti kullanın!
 const userModel = require("../users/users-model");
 const jwt = require('jsonwebtoken');
 const sinirli = (req, res, next) => {
@@ -28,10 +28,18 @@ const sinirli = (req, res, next) => {
         });
       }
       else{
-        next({
-          status:401,
-          message: authHeader
-        });
+        const r = jwt.verify(authHeader, JWT_SECRET.jwtSecret, (err, decoToken) => {
+          if(err){
+            next({
+              status:401,
+              message: "Token gecersizdir"
+            })
+          }
+          else{
+            req.decoToken = decoToken;
+            next();
+          }
+        })
       }
     }
     catch(err){
@@ -52,6 +60,20 @@ const sadece = role_name => (req, res, next) => {
 
     Tekrar authorize etmekten kaçınmak için kodu çözülmüş tokeni req nesnesinden çekin!
   */
+ try{
+  if(role_name !== req.decoToken.role_name){
+    next({
+      status:403,
+      message:"Bu, senin için değil"
+    })
+  }
+  else{
+    next();
+  }
+ }
+ catch(err){
+  next(err)
+ }
 }
 
 
