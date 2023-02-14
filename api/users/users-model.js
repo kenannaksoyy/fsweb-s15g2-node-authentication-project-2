@@ -1,6 +1,6 @@
 const db = require('../../data/db-config.js');
 
-function bul() {
+async function bul() {
   /**
     2 tabloyu birleştirmeniz lazım (join)
     Tüm kullanıcılar DİZİSİNİ çözümlemeli
@@ -18,9 +18,14 @@ function bul() {
       }
     ]
    */
+  const users = await db("users as u").leftJoin("roles as r", "u.role_id", "r.role_id")
+  .select("u.user_id","u.username","r.role_name")
+  .orderBy("u.user_id", "asc");
+  
+  return users;
 }
 
-function goreBul(filtre) {
+async function goreBul(filtre) {
   /**
     2 tabloyu birleştirmeniz gerekiyor
     Filtreyle eşleşen kullanıcıları içeren DİZİYİ çözümlemeli
@@ -34,9 +39,13 @@ function goreBul(filtre) {
       }
     ]
    */
+  const user = await db("users as u").leftJoin("roles as r", "u.role_id", "r.role_id")
+  .select("u.user_id","u.username","u.password","r.role_name")
+  .where(filtre);
+  return user;
 }
 
-function idyeGoreBul(user_id) {
+async function idyeGoreBul(user_id) {
   /**
     2 tabloyu birleştirmeniz gerekiyor
     Verilen id li kullanıcıyı çözümlemeli
@@ -47,6 +56,10 @@ function idyeGoreBul(user_id) {
       "role_name": "instructor"
     }
    */
+    const user = await db("users as u").leftJoin("roles as r", "u.role_id", "r.role_id")
+    .select("u.user_id","u.username","r.role_name")
+    .where({user_id: user_id}).first();
+    return user;
 }
 
 /**
